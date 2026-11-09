@@ -1,0 +1,12 @@
+const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
+const ts=require(path.join(process.env.DEVECO_HOME,'tools/hvigor/hvigor/node_modules/typescript'));
+require.extensions['.ts']=(m,f)=>m._compile(ts.transpileModule(fs.readFileSync(f,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText,f);
+const {canCommitText}=require('../entry/src/main/ets/domain/TextEntry.ts');
+let committed='原文';
+const change=(value,preview)=>{if(canCommitText(preview))committed=value};
+change('原文ni','ni');assert.equal(committed,'原文');
+change('原文你','');assert.equal(committed,'原文你');
+change('原文你hao','hao');assert.equal(committed,'原文你');
+change('原文你好','');assert.equal(committed,'原文你好');
+change('成都东 10:56',undefined);assert.equal(committed,'成都东 10:56');
+console.log('PASS 拼音组合期间保留已提交文字，选词及粘贴后更新；设备输入仍需原生验证');

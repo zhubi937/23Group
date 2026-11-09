@@ -1,0 +1,9 @@
+{
+  "name": "entry",
+  "version": "0.8.0",
+  "description": "截图成事移动应用",
+  "main": "",
+  "dependencies": {
+    "libjtocr.so": "file:./src/main/cpp/types/libjtocr"
+  }
+}
