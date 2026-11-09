@@ -1,0 +1,32 @@
+const fs=require('node:fs'); const path=require('node:path'); const assert=require('node:assert/strict');
+const devEco=process.env.DEVECO_HOME;
+let ts;try{ts=require(path.join(devEco,'tools/hvigor/hvigor/node_modules/typescript'));}catch(e){console.error('请设置 DEVECO_HOME 为 DevEco Studio 安装目录');process.exit(2)}
+require.extensions['.ts']=(module,file)=>module._compile(ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText,file);
+const M=require('../entry/src/main/ets/domain/Models.ts');const R=require('../entry/src/main/ets/domain/Rules.ts');const F=require('../entry/src/main/ets/domain/Fixtures.ts');
+let n=0;function test(name,fn){try{fn();n++;console.log('PASS '+name)}catch(e){console.error('FAIL '+name);throw e}}
+const base=new Date(2026,10,1,12).getTime();
+const lines=(a)=>a.map((s,i)=>new M.OcrLine('l'+i,s,new M.Box(20,i*50,500,40)));
+test('车票区分开始、结束和两站',()=>{const t=R.extract(F.fixtureLines('train'),base).task;assert.equal(t.title,'G970 出行');assert.equal(t.date,'09-10');assert.equal(t.startTime,'10:56');assert.equal(t.endTime,'14:46');assert.equal(t.location,'成都东');assert.equal(t.destination,'西安北')});
+test('缺失年份不擅自补齐',()=>{const r=R.extract(F.fixtureLines('train'),base);assert(r.warnings.some(s=>s.includes('年份未知')));assert.equal(R.reminderEpoch('09-10','10:56'),0)});
+test('作业截止不被误当举行时间',()=>{const t=R.extract(F.fixtureLines('notice'),base).task;assert.equal(t.deadline,'2026-12-18 23:59');assert.equal(t.startTime,'');assert.equal(t.date,'')});
+test('保留提取原文与坐标',()=>{const r=R.extract(F.fixtureLines('train'),base);const f=r.fields.find(x=>x.key==='startTime');assert.equal(f.original,'10:56');assert.equal(f.boxes[0].y,284);assert.equal(f.lineIds[0],'fixture_2')});
+test('闰年和无效日期',()=>{assert.equal(R.parseDate('2028年2月29日',base),'2028-02-29');assert.equal(R.parseDate('2026年2月29日',base),'');assert.equal(R.parseDate('13月5日',base),'')});
+test('相对日期按导入时间解析',()=>{assert.equal(R.parseDate('明天',base),'2026-11-02');assert.equal(R.parseDate('本周五',base),'2026-10-30');assert.equal(R.parseDate('下周五',base),'2026-11-06')});
+test('时间范围只提取合法时间',()=>{assert.deepEqual(R.times('10：56 到 14:46'),['10:56','14:46']);assert.deepEqual(R.times('27:61'),[]);assert.deepEqual(R.times('27:30'),[]);assert.deepEqual(R.times('123:45'),[])});
+test('无效日期不能设置提醒',()=>{assert.equal(R.reminderEpoch('2026-02-30','09:00'),0);assert.equal(R.reminderEpoch('2026-12-01','25:00'),0)});
+test('有效日期提醒保留本地时区',()=>{const epoch=R.reminderEpoch('2026-12-01','09:30');const d=new Date(epoch);assert.equal(d.getHours(),9);assert.equal(d.getMinutes(),30);assert.equal(d.getDate(),1)});
+test('历时不一致提示复核',()=>{const r=R.extract(lines(['G970','2026年12月1日','10:56','15:46','历时3小时50分']),base);assert(r.warnings.some(s=>s.includes('历时不一致')))});
+test('取消通知只产生候选状态',()=>{const r=R.extract(lines(['学术讲座通知','本次活动取消']),base);assert.equal(r.task.status,'已取消');assert(r.fields.find(s=>s.key==='status').note.includes('用户确认'))});
+test('延期通知可召回原事项但不自动改写',()=>{const old=R.extract(F.fixtureLines('notice'),base).task;old.id='old';const incoming=R.extract(F.fixtureLines('update'),base).task;const found=R.matchTasks(incoming,[old]);assert.equal(found.length,1);assert.equal(found[0].task.id,'old');assert.equal(old.deadline,'2026-12-18 23:59')});
+test('关联更新仅采用勾选字段',()=>{const old=R.extract(F.fixtureLines('notice'),base).task;old.notes='人工备注';const incoming=R.extract(F.fixtureLines('update'),base).task;const next=R.applySelected(old,incoming,['deadline']);assert.equal(next.deadline,'2026-12-20 23:59');assert.equal(next.title,old.title);assert.equal(next.notes,'人工备注');assert.equal(old.deadline,'2026-12-18 23:59')});
+test('空候选集合不清空旧字段',()=>{const old=new M.TaskRecord();old.title='需保留';old.location='教室';const v=R.applySelected(old,new M.TaskRecord(),[]);assert.equal(v.location,'教室');assert.equal(v.title,'需保留')});
+test('删除的事项不进入关联候选',()=>{const t=new M.TaskRecord();t.title='同一份作业';t.status='已删除';assert.equal(R.matchTasks(t,[t]).length,0)});
+test('无关标题不因为日期相同被关联',()=>{const a=new M.TaskRecord(),b=new M.TaskRecord();a.title='出行';b.title='开会';a.date=b.date='2026-12-01';a.location=b.location='西安';assert.equal(R.matchTasks(a,[b]).length,0)});
+test('历史包含逐字段前后值',()=>{const a=new M.TaskRecord();a.title='作业';a.deadline='2026-12-18 23:59';const b=M.cloneTask(a);b.deadline='2026-12-20 23:59';const dif=R.changes(a,b);assert.equal(dif.length,1);assert(dif[0].includes('2026-12-18'));assert(dif[0].includes('2026-12-20'))});
+test('按原图比例转换红框坐标',()=>{const b=R.scaledBox(new M.Box(100,200,400,60),800,320);assert.equal(b.x,40);assert.equal(b.y,80);assert.equal(b.width,160);assert.equal(b.height,24)});
+test('标题必填、结束早于开始需注明跨日',()=>{const t=new M.TaskRecord();assert(R.validateTask(t).length);t.title='夜车';t.startTime='23:00';t.endTime='01:00';assert(R.validateTask(t).some(x=>x.includes('跨日')));t.notes='跨日';assert.equal(R.validateTask(t).length,0)});
+test('识别为空仍允许手动创建',()=>{const r=R.extract([],base);assert.equal(r.fields.length,0);r.task.title='人工补充';assert.equal(R.validateTask(r.task).length,0)});
+test('OCR空格不破坏日期与时间',()=>{assert.equal(R.parseDate('2026 . 11 . 15 晚23 : 59',base),'2026-11-15');assert.deepEqual(R.times('晚23 : 59'),['23:59']);});
+test('课程提交页排除导航标题与开放窗口，标记疑似OCR误字',()=>{const input=lines(['作业内容 我的作业','活动时间 2026.09.26 01:00 - 2026.11.15 23:59 作业形式 分组作业','《移动应用开发》 项目开题提交材料','1、各组需提交开题答辩PPT一份;','2、各组需提交项目开题报告一份;','5、提交裁止日期: 2026.11.15 晚23:59。']);const out=R.extract(input,base);assert(out.task.title.includes('项目开题提交材料'));assert.equal(out.task.deadline,'2026-11-15 23:59');assert.equal(out.task.date,'');assert.equal(out.task.startTime,'');assert(out.task.notes.includes('PPT'));assert(out.task.notes.includes('开题报告'));assert(out.warnings.some(w=>w.includes('裁止')));assert.equal(input[5].text,'5、提交裁止日期: 2026.11.15 晚23:59。')});
+test('词坐标将时间红框收窄到对应原文',()=>{const l=new M.OcrLine('line','开始时间 10:56',new M.Box(10,20,500,30));l.words=[new M.OcrLine('word0','开始时间',new M.Box(10,20,150,30)),new M.OcrLine('word1','10:56',new M.Box(180,20,70,30))];const f=R.extract([l],base).fields.find(f=>f.key==='startTime');assert.equal(f.boxes[0].x,180);assert.equal(f.boxes[0].width,70);assert.equal(f.original,'开始时间 10:56')});
+console.log('\n'+n+' domain tests passed. No HarmonyOS APIs are mocked as proof of device behavior.');
