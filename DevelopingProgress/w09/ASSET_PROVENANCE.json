@@ -1,0 +1,14 @@
+{
+  "day": {
+    "file": "paper_day.png",
+    "description": "Warm ivory rag paper, subtle fibers; low contrast fern/ginkgo botanical engravings at edges, center left blank.",
+    "sha256": "7e3b5c0586f0654fb9f0f9c290840b6e387593b88ee47f15080acc17072f6e99"
+  },
+  "night": {
+    "file": "paper_night.png",
+    "description": "Matching deep charcoal rag paper, faint warm gray botanical ink, nearly blank central region.",
+    "sha256": "49d051e53202973c0ca474d7ddd840dc9e8e033c6e02f39e927397806b9134e7"
+  },
+  "tool": "image_gen",
+  "use": "Original app background assets; SVG icons and companions are project-authored."
+}

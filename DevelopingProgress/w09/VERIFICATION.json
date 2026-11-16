@@ -1,0 +1,21 @@
+{
+  "version": "0.9.0",
+  "automatedTests": 91,
+  "nativeFileProbe": [
+    "TXT",
+    "DOCX",
+    "CRC rejection",
+    "PDF text",
+    "PDF scanned + OCR",
+    "offline OCR",
+    "TaskPool inference"
+  ],
+  "cameraCaptureAndOcr": true,
+  "calendarRegistration": true,
+  "notificationDeliveryAfterForceStop": "not observed; not passed",
+  "campusLiveAccount": "not tested: user unavailable",
+  "fixedFpsClaim": false,
+  "personalDataIncluded": false,
+  "cancelAndHistoryRestore": true,
+  "systemDocumentPickerOpened": true
+}

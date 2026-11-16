@@ -1,0 +1,20 @@
+{
+  "string": [
+    {
+      "name": "app_name",
+      "value": "截图成事"
+    },
+    {
+      "name": "module_desc",
+      "value": "从截图整理个人事项，保留每次确认的依据"
+    },
+    {
+      "value": "拍摄通知、车票或作业图片并整理为日程",
+      "name": "camera_reason"
+    },
+    {
+      "value": "在系统日历中登记、更新和取消日程及喝水提醒，应用关闭后仍可由系统提醒",
+      "name": "calendar_reason"
+    }
+  ]
+}

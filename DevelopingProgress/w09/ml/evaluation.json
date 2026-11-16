@@ -1,0 +1,142 @@
+{
+  "seed": 7127,
+  "epochs": 25,
+  "seconds": 2.49,
+  "engine": "NumPy forward/backprop + Adam, 512→64→32→6, ReLU/ReLU/softmax",
+  "data": "Original synthetic Chinese campus notices. Heldout subjects, organizers, places, date/time phrasing and notice prefixes; task-title patterns are shared. No personal data.",
+  "limitation": "Synthetic holdout is NOT real campus accuracy. OCR uses separately licensed pretrained Tesseract LSTM; not trained here.",
+  "models": {
+    "classifier": {
+      "trainExamples": 3600,
+      "testExamples": 600,
+      "accuracy": 0.8716666666666667,
+      "macroF1": 0.87045731118713,
+      "perClassF1": {
+        "作业": 0.9259259259259259,
+        "出行": 0.7722007722007722,
+        "会议": 0.8023952095808383,
+        "活动": 0.9743589743589743,
+        "考试": 0.7577639751552795,
+        "其他": 0.9900990099009901
+      },
+      "confusionMatrix": [
+        [
+          100,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          100,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          16,
+          17,
+          67,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          5,
+          0,
+          95,
+          0,
+          0
+        ],
+        [
+          0,
+          37,
+          0,
+          0,
+          61,
+          2
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          100
+        ]
+      ]
+    },
+    "roles": {
+      "trainExamples": 18600,
+      "testExamples": 3100,
+      "accuracy": 0.7051612903225807,
+      "macroF1": 0.6785022429019562,
+      "perClassF1": {
+        "标题": 0.7100591715976331,
+        "日期": 0.9868421052631579,
+        "时间": 1.0,
+        "截止": 0.9130434782608695,
+        "地点": 0.0,
+        "其他": 0.46106870229007635
+      },
+      "confusionMatrix": [
+        [
+          600,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          600,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          600,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          16,
+          0,
+          84,
+          0,
+          0
+        ],
+        [
+          192,
+          0,
+          0,
+          0,
+          0,
+          408
+        ],
+        [
+          298,
+          0,
+          0,
+          0,
+          0,
+          302
+        ]
+      ]
+    }
+  },
+  "sha256": {
+    "classifier": "e8c3186e18ab196c24c8f81eaaa2dddfac0473183a242a490a9088489bec1dcc",
+    "roles": "ba5b669f740cb8dbe758e4275da940a6effe7d1c8dc2bd4577abb48ba9bc3a11"
+  }
+}

@@ -1,0 +1,28 @@
+<!doctype html><html><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src 'self' file: resource: data: blob:; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' file: resource:; connect-src 'self' file: resource:; img-src 'self' data: blob:; object-src 'none'; frame-src 'none'"></head><body><script src="./pdf.worker.min.js"></script><script src="./pdf.min.js"></script><script>
+// Trusted offline parser only. No PDF scripts, navigation or remote resource URLs.
+const pdfjs=globalThis.pdfjsLib;
+window.openPdf=async function(base64){
+  let document;
+  try{
+    const data=Uint8Array.from(atob(base64),c=>c.charCodeAt(0));
+    document=await pdfjs.getDocument({data,isEvalSupported:false,enableXfa:false,stopAtErrors:true,cMapUrl:new URL('./cmaps/',location.href).href,cMapPacked:true,standardFontDataUrl:new URL('./standard_fonts/',location.href).href,wasmUrl:new URL('./wasm/',location.href).href}).promise;
+    if(document.numPages>40)throw Error('请拆分为不超过40页的 PDF');
+    const pages=[];
+    for(let n=1;n<=document.numPages;n++){
+      const page=await document.getPage(n),content=await page.getTextContent();let text='',previousY=null;
+      for(const item of content.items){if(!('str' in item))continue;const y=item.transform[5];if(previousY!==null&&Math.abs(y-previousY)>3)text+='\n';else if(text&&!text.endsWith('\n'))text+=' ';text+=item.str;if(item.hasEOL)text+='\n';previousY=y;}
+      let png='';
+      if(!text.trim()){
+        if(document.numPages>10)throw Error('扫描 PDF 请拆分为不超过10页');
+        const initial=page.getViewport({scale:1});const scale=Math.min(2.5,2400/Math.max(initial.width,initial.height));const view=page.getViewport({scale});
+        const canvas=globalThis.document.createElement('canvas');canvas.width=Math.ceil(view.width);canvas.height=Math.ceil(view.height);
+        await page.render({canvasContext:canvas.getContext('2d'),viewport:view}).promise;png=canvas.toDataURL('image/png').split(',')[1];canvas.width=canvas.height=1;
+      }
+      if(pages.reduce((n,p)=>n+p.png.length,0)+png.length>16*1024*1024)throw Error('扫描 PDF 解码体积较大，请分批导入');pages.push({text,png});page.cleanup();
+    }
+    Reader.complete(JSON.stringify({pages,error:''}));
+  }catch(e){Reader.complete(JSON.stringify({pages:[],error:e.message||String(e)}));}
+  finally{if(document)await document.destroy();}
+};
+Reader.ready();
+</script></body></html>

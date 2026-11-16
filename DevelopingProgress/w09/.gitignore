@@ -1,0 +1,43 @@
+# Build outputs and dependency caches
+.hvigor/
+.cxx/
+oh_modules/
+node_modules/
+**/build/
+**/dist/
+
+# Local IDE and SDK configuration
+.idea/
+.vscode/
+local.properties
+*.iml
+
+# Personal signing material and local secrets
+*.p12
+*.pfx
+*.p7b
+*.cer
+*.key
+*.jks
+*.keystore
+.env
+.env.*
+!.env.example
+
+# Device data, application packages and logs
+*.hap
+*.hsp
+*.app
+*.db
+*.db-shm
+*.db-wal
+*.rdb
+*.sqlite
+*.sqlite3
+*.log
+__pycache__/
+*.pyc
+
+# OS metadata
+.DS_Store
+Thumbs.db

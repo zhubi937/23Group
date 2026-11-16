@@ -1,0 +1,10 @@
+const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
+const ts=require(path.join(process.env.DEVECO_HOME,'tools/hvigor/hvigor/node_modules/typescript'));
+require.extensions['.ts']=(m,f)=>m._compile(ts.transpileModule(fs.readFileSync(f,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText,f);
+const {RouteTrail}=require('../entry/src/main/ets/ui/RouteTrail.ts');
+const trail=new RouteTrail();
+trail.enter('source','source-a');trail.enter('detail','task-a');trail.enter('source','source-b');trail.enter('detail','task-b');
+assert.deepEqual([trail.back(),trail.back(),trail.back(),trail.back()].map(r=>[r.screen,r.id]),[['source','source-b'],['detail','task-a'],['source','source-a'],['home','']]);console.log('PASS 来源与事项交替浏览后按实际顺序返回，恢复原记录而不循环');
+trail.enter('detail','task-a');trail.enter('detail','task-a');assert.equal(trail.back().screen,'home');console.log('PASS 同一事项保存后刷新详情不会多出一个返回层级');
+trail.enter('source','source-a');trail.enter('attach','source-a');trail.enter('detail','task-a');assert.equal(trail.back().screen,'attach');assert.equal(trail.back().id,'source-a');console.log('PASS 补充来源后返回选择器与原来源身份保持一致');
+trail.enter('detail','task-b');trail.enter('home');assert.equal(trail.back().screen,'home');const copy=trail.current();copy.screen='source';assert.equal(trail.current().screen,'home');console.log('PASS 回首页重置路径，外部快照不能改变内部导航状态');

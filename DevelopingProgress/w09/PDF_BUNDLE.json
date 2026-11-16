@@ -1,0 +1,14 @@
+{
+  "upstreamVersion": "6.5.438",
+  "conversion": "scripts/bundle-pdf.py",
+  "files": [
+    {
+      "file": "pdf.worker.min.js",
+      "sha256": "84459b56dc509ccf0e7f2700c8f2c15b041d109cbf178435c38a132601c4f34a"
+    },
+    {
+      "file": "pdf.min.js",
+      "sha256": "5d86a9743392be3efa36664725cf5068ea095a6b1ad51ee4c52d0bc823bf0ea8"
+    }
+  ]
+}
